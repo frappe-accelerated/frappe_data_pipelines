@@ -1,0 +1,27 @@
+[project]
+name = "frappe_data_pipelines"
+version = "0.0.1"
+description = "Document embedding and vector search for Frappe Drive with Insights integration"
+authors = [
+    { name = "Frappe Accelerated", email = "admin@frappe-accelerated.com" }
+]
+license = { text = "MIT" }
+requires-python = ">=3.10"
+readme = "README.md"
+
+dependencies = [
+    "qdrant-client>=1.7.0",
+    "sentence-transformers>=2.2.0",
+    "openai>=1.0.0",
+    "pdfplumber>=0.10.0",
+    "python-docx>=1.0.0",
+    "langchain-text-splitters>=0.0.1",
+]
+
+[build-system]
+requires = ["flit_core >=3.4,<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.bench.frappe-dependencies]
+frappe = ">=15.0.0"
+drive = "*"

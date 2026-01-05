@@ -1,0 +1,162 @@
+{
+  "actions": [],
+  "autoname": "hash",
+  "creation": "2026-01-06 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "source_drive_file",
+    "file_title",
+    "team",
+    "column_break_source",
+    "chunk_index",
+    "total_chunks",
+    "embedding_status",
+    "content_section",
+    "chunk_text",
+    "character_count",
+    "metadata_section",
+    "qdrant_point_id",
+    "collection_name",
+    "column_break_metadata",
+    "file_mime_type",
+    "error_message"
+  ],
+  "fields": [
+    {
+      "fieldname": "source_drive_file",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Source Drive File",
+      "options": "Drive File",
+      "reqd": 1
+    },
+    {
+      "fetch_from": "source_drive_file.title",
+      "fieldname": "file_title",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "File Title",
+      "read_only": 1
+    },
+    {
+      "fieldname": "team",
+      "fieldtype": "Data",
+      "in_standard_filter": 1,
+      "label": "Team",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_source",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "chunk_index",
+      "fieldtype": "Int",
+      "in_list_view": 1,
+      "label": "Chunk Index",
+      "reqd": 1
+    },
+    {
+      "fieldname": "total_chunks",
+      "fieldtype": "Int",
+      "label": "Total Chunks"
+    },
+    {
+      "default": "Pending",
+      "fieldname": "embedding_status",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Embedding Status",
+      "options": "Pending\nProcessing\nCompleted\nFailed"
+    },
+    {
+      "fieldname": "content_section",
+      "fieldtype": "Section Break",
+      "label": "Content"
+    },
+    {
+      "fieldname": "chunk_text",
+      "fieldtype": "Long Text",
+      "label": "Chunk Text",
+      "reqd": 1
+    },
+    {
+      "fieldname": "character_count",
+      "fieldtype": "Int",
+      "label": "Character Count",
+      "read_only": 1
+    },
+    {
+      "fieldname": "metadata_section",
+      "fieldtype": "Section Break",
+      "label": "Metadata"
+    },
+    {
+      "fieldname": "qdrant_point_id",
+      "fieldtype": "Data",
+      "label": "Qdrant Point ID",
+      "read_only": 1,
+      "unique": 1
+    },
+    {
+      "fieldname": "collection_name",
+      "fieldtype": "Data",
+      "label": "Collection Name",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_metadata",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "file_mime_type",
+      "fieldtype": "Data",
+      "label": "File MIME Type",
+      "read_only": 1
+    },
+    {
+      "depends_on": "eval:doc.embedding_status=='Failed'",
+      "fieldname": "error_message",
+      "fieldtype": "Small Text",
+      "label": "Error Message",
+      "read_only": 1
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "links": [],
+  "modified": "2026-01-06 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "Frappe Data Pipelines",
+  "name": "Document Chunk",
+  "naming_rule": "Random",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "All",
+      "share": 1
+    }
+  ],
+  "sort_field": "creation",
+  "sort_order": "DESC",
+  "track_changes": 0
+}
