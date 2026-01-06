@@ -6,11 +6,15 @@
   "field_order": [
     "embedding_section",
     "embedding_provider",
-    "local_model_name",
-    "embedding_dimension",
-    "column_break_embedding",
+    "ollama_section_break",
+    "ollama_model",
+    "ollama_url",
+    "ollama_vram_info",
+    "openrouter_section_break",
     "openrouter_api_key",
     "openrouter_model",
+    "embedding_info_section",
+    "embedding_dimension",
     "qdrant_section",
     "qdrant_mode",
     "qdrant_path",
@@ -37,32 +41,47 @@
       "label": "Embedding Provider"
     },
     {
-      "default": "Local (Sentence Transformers)",
+      "default": "Local (Ollama)",
       "fieldname": "embedding_provider",
       "fieldtype": "Select",
       "label": "Embedding Provider",
-      "options": "Local (Sentence Transformers)\nOpenRouter",
+      "options": "Local (Ollama)\nOpenRouter",
       "reqd": 1
     },
     {
-      "default": "all-MiniLM-L6-v2",
-      "depends_on": "eval:doc.embedding_provider=='Local (Sentence Transformers)'",
-      "description": "Sentence Transformers model name (e.g., all-MiniLM-L6-v2, all-mpnet-base-v2)",
-      "fieldname": "local_model_name",
+      "fieldname": "ollama_section_break",
+      "fieldtype": "Section Break",
+      "label": "Ollama Settings",
+      "depends_on": "eval:doc.embedding_provider=='Local (Ollama)'"
+    },
+    {
+      "default": "nomic-embed-text",
+      "depends_on": "eval:doc.embedding_provider=='Local (Ollama)'",
+      "description": "Select the Ollama embedding model to use",
+      "fieldname": "ollama_model",
+      "fieldtype": "Select",
+      "label": "Ollama Model",
+      "options": "nomic-embed-text\nmxbai-embed-large\nall-minilm\nsnowflake-arctic-embed"
+    },
+    {
+      "default": "http://host.docker.internal:11434",
+      "depends_on": "eval:doc.embedding_provider=='Local (Ollama)'",
+      "description": "Ollama API URL. Use host.docker.internal for Docker/K8s, or localhost for local development",
+      "fieldname": "ollama_url",
       "fieldtype": "Data",
-      "label": "Local Model Name"
+      "label": "Ollama URL"
     },
     {
-      "default": "384",
-      "description": "Vector dimension (384 for MiniLM, 768 for mpnet, 1536 for OpenAI)",
-      "fieldname": "embedding_dimension",
-      "fieldtype": "Int",
-      "label": "Embedding Dimension",
-      "reqd": 1
+      "fieldname": "ollama_vram_info",
+      "fieldtype": "HTML",
+      "depends_on": "eval:doc.embedding_provider=='Local (Ollama)'",
+      "options": "<div class='alert alert-info' style='margin-top: 10px;'><strong>VRAM Requirements:</strong><ul style='margin-bottom: 0;'><li><b>nomic-embed-text</b> (768 dims): ~275 MB VRAM - <em>Recommended for most use cases</em></li><li><b>mxbai-embed-large</b> (1024 dims): ~670 MB VRAM - <em>Higher quality embeddings</em></li><li><b>all-minilm</b> (384 dims): ~45 MB VRAM - <em>Lightweight, fast</em></li><li><b>snowflake-arctic-embed</b> (1024 dims): ~670 MB VRAM - <em>Good for retrieval</em></li></ul><p style='margin-top: 10px; margin-bottom: 0;'>Run <code>ollama pull &lt;model-name&gt;</code> to download the model first.</p></div>"
     },
     {
-      "fieldname": "column_break_embedding",
-      "fieldtype": "Column Break"
+      "fieldname": "openrouter_section_break",
+      "fieldtype": "Section Break",
+      "label": "OpenRouter Settings",
+      "depends_on": "eval:doc.embedding_provider=='OpenRouter'"
     },
     {
       "depends_on": "eval:doc.embedding_provider=='OpenRouter'",
@@ -74,10 +93,24 @@
     {
       "default": "openai/text-embedding-3-small",
       "depends_on": "eval:doc.embedding_provider=='OpenRouter'",
+      "description": "Embedding model to use via OpenRouter. Dimensions are automatically set based on the model.",
       "fieldname": "openrouter_model",
       "fieldtype": "Select",
       "label": "OpenRouter Model",
-      "options": "openai/text-embedding-ada-002\nopenai/text-embedding-3-small\nopenai/text-embedding-3-large"
+      "options": "openai/text-embedding-3-small\nopenai/text-embedding-3-large\nopenai/text-embedding-ada-002\ncohere/embed-english-v3.0\ncohere/embed-multilingual-v3.0\ncohere/embed-english-light-v3.0"
+    },
+    {
+      "fieldname": "embedding_info_section",
+      "fieldtype": "Section Break",
+      "label": "Embedding Information",
+      "collapsible": 1
+    },
+    {
+      "description": "Automatically set based on model selection. This determines the vector size in Qdrant.",
+      "fieldname": "embedding_dimension",
+      "fieldtype": "Int",
+      "label": "Embedding Dimension",
+      "read_only": 1
     },
     {
       "fieldname": "qdrant_section",
@@ -185,7 +218,7 @@
       "fieldname": "test_connection_html",
       "fieldtype": "HTML",
       "label": "Test Connection",
-      "options": "<button class=\"btn btn-primary btn-sm\" onclick=\"frappe.call({method: 'frappe_data_pipelines.frappe_data_pipelines.doctype.data_pipeline_settings.data_pipeline_settings.test_qdrant_connection', callback: function(r) { if (r.message) { frappe.msgprint(r.message.success ? 'Connection successful!' : 'Connection failed: ' + r.message.message); } }})\">Test Qdrant Connection</button>"
+      "options": "<button class=\"btn btn-primary btn-sm\" onclick=\"frappe.call({method: 'frappe_data_pipelines.frappe_data_pipelines.doctype.data_pipeline_settings.data_pipeline_settings.test_connections', callback: function(r) { if (r.message) { frappe.msgprint({title: 'Connection Test', message: r.message.html, indicator: r.message.success ? 'green' : 'red'}); } }})\">Test Connections</button>"
     },
     {
       "fieldname": "connection_status",
@@ -196,7 +229,7 @@
   ],
   "issingle": 1,
   "links": [],
-  "modified": "2026-01-06 00:00:00.000000",
+  "modified": "2026-01-06 12:00:00.000000",
   "modified_by": "Administrator",
   "module": "Frappe Data Pipelines",
   "name": "Data Pipeline Settings",
