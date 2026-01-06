@@ -1,6 +1,10 @@
 """
 Embedding provider abstraction layer.
-Supports Ollama for local embeddings and OpenRouter API for cloud embeddings.
+
+Supports:
+- Ollama for local embeddings
+- OpenRouter API for cloud embeddings
+- Smart Pipeline v2 with user-configurable models
 """
 import frappe
 import requests
@@ -17,22 +21,52 @@ OLLAMA_DIMENSIONS = {
 }
 
 OPENROUTER_DIMENSIONS = {
+    # OpenAI models
     "openai/text-embedding-3-small": 1536,
     "openai/text-embedding-3-large": 3072,
     "openai/text-embedding-ada-002": 1536,
+    # Cohere models
     "cohere/embed-english-v3.0": 1024,
     "cohere/embed-multilingual-v3.0": 1024,
     "cohere/embed-english-light-v3.0": 384,
+    # Voyage models
+    "voyageai/voyage-3-large": 1024,
+    "voyageai/voyage-3.5-lite": 1024,
+    "voyageai/voyage-3": 1024,
+    # Qwen models
+    "qwen/qwen3-embedding-8b": 4096,
+    "qwen/qwen3-embedding-4b": 2048,
+    # Alibaba models
+    "alibaba/gte-qwen2-7b-instruct": 3584,
 }
+
+# Default dimension for unknown models
+DEFAULT_DIMENSION = 1536
 
 
 def get_model_dimension(provider: str, model: str) -> int:
-    """Get the embedding dimension for a given provider and model."""
+    """
+    Get the embedding dimension for a given provider and model.
+
+    Args:
+        provider: "Local (Ollama)" or "OpenRouter"
+        model: Model identifier
+
+    Returns:
+        Embedding dimension (vector size)
+    """
     if provider == "Local (Ollama)":
         return OLLAMA_DIMENSIONS.get(model, 768)
     elif provider == "OpenRouter":
-        return OPENROUTER_DIMENSIONS.get(model, 1536)
-    return 768  # Default fallback
+        return OPENROUTER_DIMENSIONS.get(model, DEFAULT_DIMENSION)
+
+    # For smart pipeline, check all known models
+    if model in OPENROUTER_DIMENSIONS:
+        return OPENROUTER_DIMENSIONS[model]
+    if model in OLLAMA_DIMENSIONS:
+        return OLLAMA_DIMENSIONS[model]
+
+    return DEFAULT_DIMENSION
 
 
 class EmbeddingProvider(ABC):
@@ -114,7 +148,7 @@ class OpenRouterProvider(EmbeddingProvider):
     def __init__(self, api_key: str, model: str = "openai/text-embedding-3-small"):
         self.api_key = api_key
         self.model = model
-        self._dimension = OPENROUTER_DIMENSIONS.get(model, 1536)
+        self._dimension = OPENROUTER_DIMENSIONS.get(model, DEFAULT_DIMENSION)
 
     def embed(self, texts: List[str]) -> List[List[float]]:
         """Generate embeddings using OpenRouter API."""
@@ -160,16 +194,109 @@ class OpenRouterProvider(EmbeddingProvider):
             )
 
             if response.data:
-                return {"success": True, "message": f"Connected to OpenRouter. Model '{self.model}' is working."}
+                dim = len(response.data[0].embedding)
+                return {
+                    "success": True,
+                    "message": f"Connected to OpenRouter. Model '{self.model}' is working. Dimension: {dim}"
+                }
             return {"success": False, "message": "No response from OpenRouter"}
         except Exception as e:
             return {"success": False, "message": str(e)}
 
 
+class SmartPipelineProvider(EmbeddingProvider):
+    """
+    Embedding provider for Smart Pipeline v2.
+
+    Uses user-configured model from Data Pipeline Settings.
+    """
+
+    def __init__(self, api_key: str, model: str):
+        self.api_key = api_key
+        self.model = model
+        self._dimension = OPENROUTER_DIMENSIONS.get(model, DEFAULT_DIMENSION)
+        self._detected_dimension = None
+
+    def embed(self, texts: List[str]) -> List[List[float]]:
+        """Generate embeddings using the configured model."""
+        if not texts:
+            return []
+
+        from openai import OpenAI
+
+        client = OpenAI(
+            base_url="https://openrouter.ai/api/v1",
+            api_key=self.api_key
+        )
+
+        try:
+            response = client.embeddings.create(
+                model=self.model,
+                input=texts,
+                encoding_format="float"
+            )
+
+            # Sort by index to ensure correct order
+            sorted_data = sorted(response.data, key=lambda x: x.index)
+            embeddings = [item.embedding for item in sorted_data]
+
+            # Detect dimension from first response
+            if embeddings and not self._detected_dimension:
+                self._detected_dimension = len(embeddings[0])
+
+            return embeddings
+
+        except Exception as e:
+            frappe.log_error(
+                title=f"Smart Pipeline embedding failed: {self.model}",
+                message=str(e)
+            )
+            raise
+
+    def get_dimension(self) -> int:
+        """Return the embedding dimension."""
+        if self._detected_dimension:
+            return self._detected_dimension
+        return self._dimension
+
+    def test_connection(self) -> dict:
+        """Test the embedding model."""
+        try:
+            embeddings = self.embed(["test"])
+            if embeddings:
+                dim = len(embeddings[0])
+                return {
+                    "success": True,
+                    "message": f"Smart Pipeline embedding model '{self.model}' is working. Dimension: {dim}"
+                }
+            return {"success": False, "message": "No embeddings returned"}
+        except Exception as e:
+            return {"success": False, "message": str(e)}
+
+
 def get_embedding_provider() -> EmbeddingProvider:
-    """Factory function to get the configured embedding provider."""
+    """
+    Factory function to get the configured embedding provider.
+
+    Checks for Smart Pipeline first, then falls back to legacy provider selection.
+
+    Returns:
+        EmbeddingProvider instance
+    """
     settings = frappe.get_single("Data Pipeline Settings")
 
+    # Check if Smart Pipeline is enabled with a v2 embedding model
+    if getattr(settings, 'enable_smart_pipeline', False):
+        embedding_model_v2 = getattr(settings, 'embedding_model_v2', None)
+        if embedding_model_v2:
+            api_key = settings.get_password("openrouter_api_key")
+            if api_key:
+                return SmartPipelineProvider(
+                    api_key=api_key,
+                    model=embedding_model_v2
+                )
+
+    # Fall back to legacy provider selection
     if settings.embedding_provider == "OpenRouter":
         api_key = settings.get_password("openrouter_api_key")
         if not api_key:
@@ -184,3 +311,19 @@ def get_embedding_provider() -> EmbeddingProvider:
             model=settings.ollama_model or "nomic-embed-text",
             base_url=settings.ollama_url or "http://localhost:11434"
         )
+
+
+def get_smart_embedding_dimension() -> int:
+    """
+    Get the embedding dimension for the smart pipeline model.
+
+    Returns:
+        Dimension of the configured embedding model
+    """
+    try:
+        settings = frappe.get_single("Data Pipeline Settings")
+        if settings.enable_smart_pipeline and settings.embedding_model_v2:
+            return get_model_dimension("OpenRouter", settings.embedding_model_v2)
+    except Exception:
+        pass
+    return DEFAULT_DIMENSION

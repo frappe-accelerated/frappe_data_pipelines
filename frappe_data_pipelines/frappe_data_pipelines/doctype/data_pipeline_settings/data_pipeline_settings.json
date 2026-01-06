@@ -4,6 +4,19 @@
   "doctype": "DocType",
   "engine": "InnoDB",
   "field_order": [
+    "smart_pipeline_section",
+    "enable_smart_pipeline",
+    "enable_contextual_enrichment",
+    "enable_vision_processing",
+    "column_break_smart",
+    "enable_semantic_chunking",
+    "enable_hybrid_search",
+    "model_selection_section",
+    "embedding_model_v2",
+    "context_enrichment_model",
+    "column_break_models",
+    "vision_model",
+    "reranker_model",
     "embedding_section",
     "embedding_provider",
     "ollama_section_break",
@@ -30,15 +43,108 @@
     "column_break_processing",
     "enabled_file_types",
     "enable_auto_processing",
+    "actions_section",
+    "actions_html",
     "status_section",
-    "test_connection_html",
     "connection_status"
   ],
   "fields": [
     {
+      "fieldname": "smart_pipeline_section",
+      "fieldtype": "Section Break",
+      "label": "Smart Pipeline Configuration"
+    },
+    {
+      "default": "1",
+      "description": "Use multi-step intelligent processing with contextual enrichment, vision, and semantic chunking",
+      "fieldname": "enable_smart_pipeline",
+      "fieldtype": "Check",
+      "label": "Enable Smart Pipeline"
+    },
+    {
+      "default": "1",
+      "depends_on": "eval:doc.enable_smart_pipeline",
+      "description": "Prepend situating context to each chunk before embedding (Anthropic's contextual retrieval approach)",
+      "fieldname": "enable_contextual_enrichment",
+      "fieldtype": "Check",
+      "label": "Enable Contextual Enrichment"
+    },
+    {
+      "default": "1",
+      "depends_on": "eval:doc.enable_smart_pipeline",
+      "description": "Use vision models to describe images, charts, and infographics",
+      "fieldname": "enable_vision_processing",
+      "fieldtype": "Check",
+      "label": "Enable Vision Processing"
+    },
+    {
+      "fieldname": "column_break_smart",
+      "fieldtype": "Column Break"
+    },
+    {
+      "default": "1",
+      "depends_on": "eval:doc.enable_smart_pipeline",
+      "description": "Use structure-aware chunking instead of fixed character-based chunking",
+      "fieldname": "enable_semantic_chunking",
+      "fieldtype": "Check",
+      "label": "Enable Semantic Chunking"
+    },
+    {
+      "default": "1",
+      "depends_on": "eval:doc.enable_smart_pipeline",
+      "description": "Use BM25 sparse vectors alongside dense embeddings for better retrieval",
+      "fieldname": "enable_hybrid_search",
+      "fieldtype": "Check",
+      "label": "Enable Hybrid Search"
+    },
+    {
+      "fieldname": "model_selection_section",
+      "fieldtype": "Section Break",
+      "label": "Model Selection",
+      "depends_on": "eval:doc.enable_smart_pipeline"
+    },
+    {
+      "default": "qwen/qwen3-embedding-8b",
+      "depends_on": "eval:doc.enable_smart_pipeline",
+      "description": "OpenRouter model ID for embeddings (e.g., qwen/qwen3-embedding-8b, voyageai/voyage-3-large)",
+      "fieldname": "embedding_model_v2",
+      "fieldtype": "Data",
+      "label": "Embedding Model"
+    },
+    {
+      "default": "google/gemini-3-flash-preview",
+      "depends_on": "eval:doc.enable_contextual_enrichment",
+      "description": "OpenRouter model ID for generating chunk context (e.g., google/gemini-3-flash-preview)",
+      "fieldname": "context_enrichment_model",
+      "fieldtype": "Data",
+      "label": "Context Enrichment Model"
+    },
+    {
+      "fieldname": "column_break_models",
+      "fieldtype": "Column Break"
+    },
+    {
+      "default": "qwen/qwen3-vl-235b-a22b-instruct",
+      "depends_on": "eval:doc.enable_vision_processing",
+      "description": "OpenRouter model ID for image/chart understanding (e.g., qwen/qwen3-vl-235b-a22b-instruct)",
+      "fieldname": "vision_model",
+      "fieldtype": "Data",
+      "label": "Vision Model"
+    },
+    {
+      "default": "cohere/rerank-v3",
+      "depends_on": "eval:doc.enable_hybrid_search",
+      "description": "Model for reranking search results (e.g., cohere/rerank-v3)",
+      "fieldname": "reranker_model",
+      "fieldtype": "Data",
+      "label": "Reranker Model"
+    },
+    {
       "fieldname": "embedding_section",
       "fieldtype": "Section Break",
-      "label": "Embedding Provider"
+      "label": "Legacy Embedding Provider",
+      "collapsible": 1,
+      "collapsible_depends_on": "eval:doc.enable_smart_pipeline"
     },
     {
       "default": "Local (Ollama)",
@@ -212,15 +318,21 @@
       "label": "Enable Automatic Processing"
     },
     {
-      "fieldname": "status_section",
+      "fieldname": "actions_section",
       "fieldtype": "Section Break",
-      "label": "Status"
+      "label": "Actions"
     },
     {
-      "fieldname": "test_connection_html",
+      "fieldname": "actions_html",
       "fieldtype": "HTML",
-      "label": "Test Connection",
-      "options": "<div style=\"margin-bottom: 15px;\"><button class=\"btn btn-primary btn-sm\" onclick=\"frappe.call({method: 'frappe_data_pipelines.frappe_data_pipelines.doctype.data_pipeline_settings.data_pipeline_settings.test_connections', callback: function(r) { if (r.message) { frappe.msgprint({title: 'Connection Test', message: r.message.html, indicator: r.message.success ? 'green' : 'red'}); } }})\">Test Connections</button></div>"
+      "label": "Action Buttons",
+      "options": "<div style=\"display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 20px;\"><button id=\"test-connections-btn\" class=\"btn btn-primary btn-sm\" onclick=\"if(this.disabled) return; this.disabled=true; this.innerText='Testing...'; frappe.call({method: 'frappe_data_pipelines.frappe_data_pipelines.doctype.data_pipeline_settings.data_pipeline_settings.test_connections', callback: function(r) { var btn=document.getElementById('test-connections-btn'); btn.disabled=false; btn.innerText='Test Connections'; if (r.message) { frappe.msgprint({title: 'Connection Test', message: r.message.html, indicator: r.message.success ? 'green' : 'red'}); } }})\">Test Connections</button><button id=\"process-existing-btn\" class=\"btn btn-warning btn-sm\" onclick=\"if(this.disabled) return; this.disabled=true; this.innerText='Processing...'; frappe.call({method: 'frappe_data_pipelines.frappe_data_pipelines.doctype.data_pipeline_settings.data_pipeline_settings.process_existing_files', callback: function(r) { var btn=document.getElementById('process-existing-btn'); btn.disabled=false; btn.innerText='Process Existing Files'; if (r.message) { frappe.msgprint({title: 'Process Existing Files', message: r.message.message, indicator: r.message.success ? 'green' : 'red'}); } }})\">Process Existing Files</button><button id=\"refresh-stats-btn\" class=\"btn btn-default btn-sm\" onclick=\"if(this.disabled) return; this.disabled=true; this.innerText='Loading...'; frappe.call({method: 'frappe_data_pipelines.frappe_data_pipelines.doctype.data_pipeline_settings.data_pipeline_settings.get_processing_stats', callback: function(r) { var btn=document.getElementById('refresh-stats-btn'); btn.disabled=false; btn.innerText='Refresh Stats'; if (r.message) { var s = r.message; document.getElementById('pipeline-stats-display').innerHTML = '<strong>Processing Statistics:</strong><br>Drive Files: ' + s.total_drive_files + ' | Jobs: ' + s.total_jobs + ' (Queued: ' + s.queued_jobs + ', Processing: ' + s.processing_jobs + ', Completed: ' + s.completed_jobs + ', Failed: ' + s.failed_jobs + ') | Chunks: ' + s.total_chunks; } }})\">Refresh Stats</button></div><div id=\"pipeline-stats-display\" class=\"alert alert-info\" style=\"margin-top: 15px;\">Click 'Refresh Stats' to load statistics</div>"
+    },
+    {
+      "fieldname": "status_section",
+      "fieldtype": "Section Break",
+      "label": "Connection Status",
+      "collapsible": 1
     },
     {
       "fieldname": "connection_status",
@@ -231,7 +343,7 @@
   ],
   "issingle": 1,
   "links": [],
-  "modified": "2026-01-06 12:00:00.000000",
+  "modified": "2026-01-06 14:00:00.000000",
   "modified_by": "Administrator",
   "module": "Frappe Data Pipelines",
   "name": "Data Pipeline Settings",

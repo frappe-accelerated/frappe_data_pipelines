@@ -15,6 +15,13 @@
     "content_section",
     "chunk_text",
     "character_count",
+    "context_section",
+    "context_prefix",
+    "section_path",
+    "column_break_context",
+    "detected_languages",
+    "has_visual_content",
+    "processing_strategy",
     "metadata_section",
     "qdrant_point_id",
     "collection_name",
@@ -90,6 +97,52 @@
       "read_only": 1
     },
     {
+      "fieldname": "context_section",
+      "fieldtype": "Section Break",
+      "label": "Smart Pipeline Context",
+      "collapsible": 1
+    },
+    {
+      "fieldname": "context_prefix",
+      "fieldtype": "Small Text",
+      "label": "Context Prefix",
+      "description": "AI-generated context that situates this chunk within the document",
+      "read_only": 1
+    },
+    {
+      "fieldname": "section_path",
+      "fieldtype": "Data",
+      "label": "Section Path",
+      "description": "Hierarchical path like 'Chapter 1 > Section 2 > Subsection'",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_context",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "detected_languages",
+      "fieldtype": "Data",
+      "label": "Detected Languages",
+      "description": "Languages detected in this chunk (e.g., 'en,ar')",
+      "read_only": 1
+    },
+    {
+      "default": "0",
+      "fieldname": "has_visual_content",
+      "fieldtype": "Check",
+      "label": "Has Visual Content",
+      "description": "This chunk contains content extracted from images/charts",
+      "read_only": 1
+    },
+    {
+      "fieldname": "processing_strategy",
+      "fieldtype": "Data",
+      "label": "Processing Strategy",
+      "description": "How this chunk was processed (text, visual, structured, hybrid)",
+      "read_only": 1
+    },
+    {
       "fieldname": "metadata_section",
       "fieldtype": "Section Break",
       "label": "Metadata"
@@ -127,7 +180,7 @@
   ],
   "index_web_pages_for_search": 0,
   "links": [],
-  "modified": "2026-01-06 00:00:00.000000",
+  "modified": "2026-01-06 14:00:00.000000",
   "modified_by": "Administrator",
   "module": "Frappe Data Pipelines",
   "name": "Document Chunk",

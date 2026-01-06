@@ -62,7 +62,7 @@ def on_file_upload(doc, method):
     frappe.enqueue(
         "frappe_data_pipelines.tasks.process_embedding.process_embedding_job",
         queue="long",
-        job_name=job.name,
+        embedding_job_name=job.name,
         enqueue_after_commit=True
     )
 
