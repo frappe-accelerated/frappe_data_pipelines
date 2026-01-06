@@ -218,7 +218,7 @@
       "fieldname": "test_connection_html",
       "fieldtype": "HTML",
       "label": "Test Connection",
-      "options": "<button class=\"btn btn-primary btn-sm\" onclick=\"frappe.call({method: 'frappe_data_pipelines.frappe_data_pipelines.doctype.data_pipeline_settings.data_pipeline_settings.test_connections', callback: function(r) { if (r.message) { frappe.msgprint({title: 'Connection Test', message: r.message.html, indicator: r.message.success ? 'green' : 'red'}); } }})\">Test Connections</button>"
+      "options": "<div style=\"margin-bottom: 15px;\"><button class=\"btn btn-primary btn-sm\" onclick=\"frappe.call({method: 'frappe_data_pipelines.frappe_data_pipelines.doctype.data_pipeline_settings.data_pipeline_settings.test_connections', callback: function(r) { if (r.message) { frappe.msgprint({title: 'Connection Test', message: r.message.html, indicator: r.message.success ? 'green' : 'red'}); } }})\">Test Connections</button></div>"
     },
     {
       "fieldname": "connection_status",
