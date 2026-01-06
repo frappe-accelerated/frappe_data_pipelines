@@ -34,6 +34,7 @@ def test_connections():
     settings = frappe.get_single("Data Pipeline Settings")
 
     # Test embedding provider
+    provider = None
     try:
         if settings.embedding_provider == "Local (Ollama)":
             provider = OllamaProvider(
@@ -55,7 +56,7 @@ def test_connections():
                     model=settings.openrouter_model or "openai/text-embedding-3-small"
                 )
 
-        if "provider" in dir():
+        if provider is not None:
             embed_result = provider.test_connection()
             results.append({
                 "name": "Embedding Provider",
@@ -91,12 +92,12 @@ def test_connections():
         })
         overall_success = False
 
-    # Update connection status
+    # Update connection status without triggering modified timestamp
     status_parts = []
     for r in results:
         icon = "✓" if r["success"] else "✗"
         status_parts.append(f"{icon} {r['name']}")
-    settings.db_set("connection_status", " | ".join(status_parts))
+    settings.db_set("connection_status", " | ".join(status_parts), update_modified=False)
 
     # Build HTML response
     html_parts = ["<ul style='list-style: none; padding-left: 0;'>"]
@@ -120,12 +121,12 @@ def test_qdrant_connection():
 
         result = QdrantService.test_connection()
 
-        # Update connection status
+        # Update connection status without modifying timestamp
         settings = frappe.get_single("Data Pipeline Settings")
         if result["success"]:
-            settings.db_set("connection_status", f"Connected - {result.get('collections_count', 0)} collections")
+            settings.db_set("connection_status", f"Connected - {result.get('collections_count', 0)} collections", update_modified=False)
         else:
-            settings.db_set("connection_status", f"Failed: {result.get('message', 'Unknown error')}")
+            settings.db_set("connection_status", f"Failed: {result.get('message', 'Unknown error')}", update_modified=False)
 
         return result
 

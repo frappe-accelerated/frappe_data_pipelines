@@ -88,7 +88,8 @@
       "fieldname": "openrouter_api_key",
       "fieldtype": "Password",
       "label": "OpenRouter API Key",
-      "mandatory_depends_on": "eval:doc.embedding_provider=='OpenRouter'"
+      "mandatory_depends_on": "eval:doc.embedding_provider=='OpenRouter'",
+      "hide_password_strength": 1
     },
     {
       "default": "openai/text-embedding-3-small",
@@ -163,7 +164,8 @@
       "description": "Optional: Required if Qdrant server has authentication enabled",
       "fieldname": "qdrant_api_key",
       "fieldtype": "Password",
-      "label": "Qdrant API Key"
+      "label": "Qdrant API Key",
+      "hide_password_strength": 1
     },
     {
       "fieldname": "processing_section",
