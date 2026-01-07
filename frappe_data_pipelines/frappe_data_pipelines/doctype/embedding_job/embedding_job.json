@@ -63,7 +63,7 @@
       "in_list_view": 1,
       "in_standard_filter": 1,
       "label": "Status",
-      "options": "Queued\nExtracting Text\nChunking\nEmbedding\nStoring Vectors\nCompleted\nFailed"
+      "options": "Queued\nExtracting Text\nChunking\nEnriching Context\nEmbedding\nStoring Vectors\nCompleted\nFailed"
     },
     {
       "default": "Normal",
@@ -140,9 +140,8 @@
     },
     {
       "fieldname": "error_traceback",
-      "fieldtype": "Code",
+      "fieldtype": "Long Text",
       "label": "Error Traceback",
-      "options": "Python",
       "read_only": 1
     },
     {
