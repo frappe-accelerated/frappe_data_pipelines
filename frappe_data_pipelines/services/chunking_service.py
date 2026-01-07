@@ -22,78 +22,22 @@ class SemanticChunk:
 
 class DoclingChunker:
     """
-    Smart chunker using Docling's HybridChunker.
+    Smart chunker using docling-core's HybridChunker.
 
     Features:
     - Structure-aware chunking that respects document hierarchy
-    - Token-aware sizing aligned with embedding model
     - Automatic merging of small peer chunks
     - Preserves headings and context
+    - Uses lightweight docling-core (no heavy numpy/torch dependencies)
     """
 
-    def __init__(self, max_tokens: int = 500, tokenizer_model: str = None):
-        """
-        Initialize Docling chunker.
-
-        Args:
-            max_tokens: Target max tokens per chunk (~500 recommended)
-            tokenizer_model: HuggingFace model ID for tokenizer alignment
-        """
-        self.max_tokens = max_tokens
-        self.tokenizer_model = tokenizer_model
-
-    def chunk_document(self, file_path: str) -> List[SemanticChunk]:
-        """
-        Chunk a document file using Docling.
-
-        Args:
-            file_path: Path to the document file
-
-        Returns:
-            List of SemanticChunk objects
-        """
-        from docling.document_converter import DocumentConverter
-        from docling.chunking import HybridChunker
-
-        # Convert document to DoclingDocument
-        converter = DocumentConverter()
-        result = converter.convert(source=file_path)
-        doc = result.document
-
-        # Setup tokenizer (align with embedding model if specified)
-        tokenizer = self._get_tokenizer()
-
-        # Create hybrid chunker
-        chunker = HybridChunker(
-            tokenizer=tokenizer,
-            max_tokens=self.max_tokens,
-            merge_peers=True,  # Merge small adjacent chunks with same context
-        )
-
-        # Chunk the document
-        chunks = []
-        for i, chunk in enumerate(chunker.chunk(dl_doc=doc)):
-            # Get contextualized text (includes headings/context)
-            contextualized = chunker.contextualize(chunk=chunk)
-
-            # Build section path from chunk metadata
-            section_path = self._build_section_path(chunk)
-
-            chunks.append(SemanticChunk(
-                text=chunk.text,
-                section_path=section_path,
-                chunk_index=i,
-                start_char=0,  # Docling doesn't provide char offsets
-                end_char=len(chunk.text)
-            ))
-
-        return chunks
+    def __init__(self):
+        """Initialize Docling chunker."""
+        pass
 
     def chunk_text(self, text: str, doc_type: str = "text") -> List[SemanticChunk]:
         """
-        Chunk plain text using Docling.
-
-        For plain text, we create a simple DoclingDocument and chunk it.
+        Chunk plain text using docling-core's HybridChunker.
 
         Args:
             text: Plain text to chunk
@@ -104,21 +48,22 @@ class DoclingChunker:
         """
         try:
             from docling_core.types.doc import DoclingDocument
-            from docling.chunking import HybridChunker
+            from docling_core.types.doc.labels import DocItemLabel
+            from docling_core.transforms.chunker import HybridChunker
 
             # Create a DoclingDocument from plain text
+            # Split into paragraphs and add each as a paragraph item
             doc = DoclingDocument(name="text_document")
-            doc.add_text(text=text)
 
-            # Setup tokenizer
-            tokenizer = self._get_tokenizer()
+            paragraphs = [p.strip() for p in text.split('\n\n') if p.strip()]
+            if not paragraphs:
+                paragraphs = [text.strip()] if text.strip() else []
 
-            # Create hybrid chunker
-            chunker = HybridChunker(
-                tokenizer=tokenizer,
-                max_tokens=self.max_tokens,
-                merge_peers=True,
-            )
+            for para in paragraphs:
+                doc.add_text(label=DocItemLabel.PARAGRAPH, text=para)
+
+            # Create hybrid chunker with peer merging
+            chunker = HybridChunker(merge_peers=True)
 
             # Chunk the document
             chunks = []
@@ -133,32 +78,14 @@ class DoclingChunker:
                     end_char=len(chunk.text)
                 ))
 
-            return chunks
+            return chunks if chunks else self._fallback_chunk(text)
 
         except Exception as e:
             frappe.log_error(
                 title="Docling chunking failed",
                 message=f"Falling back to legacy chunker: {str(e)}"
             )
-            # Fall back to legacy chunker
             return self._fallback_chunk(text)
-
-    def _get_tokenizer(self):
-        """Get tokenizer aligned with embedding model."""
-        try:
-            from docling_core.transforms.chunker.tokenizer.huggingface import HuggingFaceTokenizer
-            from transformers import AutoTokenizer
-
-            # Use specified model or default to a common embedding tokenizer
-            model_id = self.tokenizer_model or "sentence-transformers/all-MiniLM-L6-v2"
-
-            return HuggingFaceTokenizer(
-                tokenizer=AutoTokenizer.from_pretrained(model_id),
-                max_tokens=self.max_tokens,
-            )
-        except Exception:
-            # Return None to use Docling's default tokenizer
-            return None
 
     def _build_section_path(self, chunk) -> str:
         """Build section path from chunk metadata."""
@@ -174,7 +101,7 @@ class DoclingChunker:
                 if doc_items and len(doc_items) > 0:
                     first_item = doc_items[0]
                     if hasattr(first_item, 'label'):
-                        return first_item.label
+                        return str(first_item.label)
 
             return "Document"
         except Exception:
@@ -182,7 +109,6 @@ class DoclingChunker:
 
     def _fallback_chunk(self, text: str) -> List[SemanticChunk]:
         """Fallback to simple chunking if Docling fails."""
-        # Use legacy chunker
         legacy = ChunkingService()
         simple_chunks = legacy.chunk_text(text)
 
@@ -570,22 +496,16 @@ def get_chunker(use_semantic: bool = True, use_docling: bool = True) -> object:
         settings = frappe.get_single("Data Pipeline Settings")
 
         if use_semantic and settings.enable_smart_pipeline and settings.enable_semantic_chunking:
-            # Target ~500 tokens per chunk
-            max_tokens = 500
-
-            # Try Docling first (best quality)
+            # Try Docling first (best quality) - uses lightweight docling-core
             if use_docling:
                 try:
-                    # Test if docling is available
-                    from docling.chunking import HybridChunker
-                    return DoclingChunker(
-                        max_tokens=max_tokens,
-                        tokenizer_model=None  # Use default tokenizer
-                    )
+                    # Test if docling-core is available
+                    from docling_core.transforms.chunker import HybridChunker
+                    return DoclingChunker()
                 except ImportError:
                     frappe.log_error(
-                        title="Docling not available",
-                        message="Falling back to SemanticChunker"
+                        title="docling-core not available",
+                        message="Falling back to SemanticChunker. Install with: pip install docling-core[chunking]"
                     )
 
             # Fall back to our custom semantic chunker
