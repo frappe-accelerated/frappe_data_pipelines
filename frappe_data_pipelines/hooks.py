@@ -10,6 +10,10 @@ app_color = "blue"
 # Required apps
 required_apps = ["frappe", "drive"]
 
+# Setup hooks - initialize settings after install/migrate
+after_install = "frappe_data_pipelines.setup.after_install.execute"
+after_migrate = "frappe_data_pipelines.setup.after_install.execute"
+
 # Document Events - Hook into Drive File uploads
 doc_events = {
     "Drive File": {
