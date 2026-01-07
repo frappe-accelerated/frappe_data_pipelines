@@ -107,6 +107,7 @@ def process_smart_pipeline(job, settings):
     chunk_texts = []
     section_paths = []
     text = ""
+    visual_chunks = None
 
     # Handle images specially - no chunking needed, vision description is a single unit
     if plan.strategy == 'visual' and plan.document_type == 'image':
@@ -157,6 +158,12 @@ def process_smart_pipeline(job, settings):
             for vc in visual_chunks:
                 chunk_texts.append(vc.combined)
                 section_paths.append("Visual Content")
+
+    # Build visual_info flags (True for visual chunks, False for text chunks)
+    visual_info = None
+    if visual_chunks:
+        num_text_chunks = len(chunk_texts) - len(visual_chunks)
+        visual_info = [False] * num_text_chunks + [True] * len(visual_chunks)
 
     if not chunk_texts:
         raise ValueError("No chunks generated from content")
