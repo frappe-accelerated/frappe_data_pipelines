@@ -1,0 +1,52 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"shortcut-1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Data Pipeline Settings\",\"shortcut_type\":\"DocType\",\"link_to\":\"Data Pipeline Settings\",\"doc_view\":\"\",\"color\":\"Blue\"}},{\"id\":\"shortcut-2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Embedding Jobs\",\"shortcut_type\":\"DocType\",\"link_to\":\"Embedding Job\",\"doc_view\":\"List\",\"color\":\"Green\"}},{\"id\":\"shortcut-3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Document Chunks\",\"shortcut_type\":\"DocType\",\"link_to\":\"Document Chunk\",\"doc_view\":\"List\",\"color\":\"Grey\"}}]",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "database",
+ "is_hidden": 0,
+ "label": "Data Pipelines",
+ "links": [
+  {
+   "hidden": 0,
+   "label": "Data Pipelines",
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "label": "Settings",
+   "link_to": "Data Pipeline Settings",
+   "link_type": "DocType",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "label": "Embedding Jobs",
+   "link_to": "Embedding Job",
+   "link_type": "DocType",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "label": "Document Chunks",
+   "link_to": "Document Chunk",
+   "link_type": "DocType",
+   "type": "Link"
+  }
+ ],
+ "module": "Frappe Data Pipelines",
+ "name": "Frappe Data Pipelines",
+ "number_cards": [],
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "restrict_to_domain": "",
+ "roles": [],
+ "sequence_id": 10,
+ "shortcuts": [],
+ "title": "Data Pipelines",
+ "type": "Workspace"
+}

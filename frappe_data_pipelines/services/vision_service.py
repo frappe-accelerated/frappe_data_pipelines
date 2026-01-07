@@ -30,17 +30,17 @@ class VisionService:
     semantic understanding of visual content.
     """
 
-    IMAGE_DESCRIPTION_PROMPT = """Analyze this image from a document and provide a detailed description.
+    # Context-first prompt: situating context prepended before content (per Anthropic's approach)
+    IMAGE_DESCRIPTION_PROMPT = """Analyze this image for search retrieval.
 
-Include the following in your response:
-1. **Visual Content**: What type of image is this? (chart, diagram, photo, infographic, table, etc.)
-2. **Key Information**: What are the main data points, statistics, or facts shown?
-3. **Text Content**: Transcribe any visible text, labels, or annotations.
-4. **Context**: What is the main message or insight this image conveys?
-5. **Relationships**: If applicable, describe any relationships, trends, or comparisons shown.
+First, provide a brief situating context (1-2 sentences) that describes what type of visual this is and what topic/domain it relates to.
 
-Format your response as structured text suitable for search indexing.
-Be thorough but concise - aim for 200-400 words."""
+Then describe the content:
+- Key data, numbers, statistics shown
+- Important text, labels, titles visible
+- Relationships or trends depicted
+
+Be concise (100-150 words total). The context should come first to help situate the content for search."""
 
     SUPPORTED_IMAGE_TYPES = {
         '.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.tiff', '.tif'
@@ -169,8 +169,8 @@ Be thorough but concise - aim for 200-400 words."""
                     ]
                 }
             ],
-            max_tokens=1000,
-            temperature=0.3
+            max_tokens=250,  # Concise output: 100-150 words ≈ 150-200 tokens
+            temperature=0.1  # More deterministic for factual content
         )
 
         if response.choices and response.choices[0].message:
