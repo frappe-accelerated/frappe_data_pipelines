@@ -99,66 +99,83 @@ def process_smart_pipeline(job, settings):
         mime_type=job.file_mime_type
     )
 
-    # Step 2: Extract text and chunk using Docling (combined for efficiency)
+    # Step 2: Extract text and chunk
     job.status = "Extracting Text"
     job.save(ignore_permissions=True)
     frappe.db.commit()
 
-    # Try Docling first for document files (PDF, DOCX, etc.)
     chunk_texts = []
     section_paths = []
     text = ""
 
-    chunker = get_chunker(use_semantic=settings.enable_semantic_chunking, use_docling=True)
-
-    if isinstance(chunker, DoclingChunker):
-        # Use Docling for direct document processing (best quality)
-        job.status = "Chunking"
-        job.save(ignore_permissions=True)
-        frappe.db.commit()
-
-        try:
-            semantic_chunks = chunker.chunk_document(file_path)
-            chunk_texts = [c.text for c in semantic_chunks]
-            section_paths = [c.section_path for c in semantic_chunks]
-            text = "\n\n".join(chunk_texts)  # Reconstruct for context enrichment
-        except Exception as e:
-            frappe.log_error(
-                title="Docling document chunking failed",
-                message=f"Falling back to text extraction: {str(e)}"
-            )
-            # Fall back to text extraction + chunking
-            text, visual_chunks = extract_text_smart(job, plan, settings)
-            if text:
-                semantic_chunks = chunker.chunk_text(text, plan.document_type)
-                chunk_texts = [c.text for c in semantic_chunks]
-                section_paths = [c.section_path for c in semantic_chunks]
-    else:
-        # Use legacy extraction + chunking
+    # Handle images specially - no chunking needed, vision description is a single unit
+    if plan.content_type == 'visual' and plan.document_type == 'image':
+        # Extract image description using vision service
         text, visual_chunks = extract_text_smart(job, plan, settings)
-        if not text and not visual_chunks:
-            raise ValueError("No content could be extracted from file")
-
-        job.status = "Chunking"
-        job.save(ignore_permissions=True)
-        frappe.db.commit()
-
-        if isinstance(chunker, SemanticChunker):
-            semantic_chunks = chunker.chunk(text, plan.document_type)
-            chunk_texts = [c.text for c in semantic_chunks]
-            section_paths = [c.section_path for c in semantic_chunks]
-        else:
-            chunk_texts = chunker.chunk_text(text)
-            section_paths = ["Document"] * len(chunk_texts)
-
-        # Add visual content chunks if any
-        visual_info = []
-        if visual_chunks:
+        if text:
+            # Image description is a single chunk - don't split it
+            chunk_texts = [text]
+            section_paths = ["Image Description"]
+        elif visual_chunks:
+            # Use visual chunks directly
             for vc in visual_chunks:
                 chunk_texts.append(vc.combined)
                 section_paths.append("Visual Content")
-                visual_info.append(True)
-            visual_info = [False] * (len(chunk_texts) - len(visual_chunks)) + visual_info
+
+        if not chunk_texts:
+            raise ValueError("No content could be extracted from image")
+    else:
+        # For documents: use Docling or semantic chunking
+        chunker = get_chunker(use_semantic=settings.enable_semantic_chunking, use_docling=True)
+
+        if isinstance(chunker, DoclingChunker):
+            # Use Docling for direct document processing (best quality)
+            job.status = "Chunking"
+            job.save(ignore_permissions=True)
+            frappe.db.commit()
+
+            try:
+                semantic_chunks = chunker.chunk_document(file_path)
+                chunk_texts = [c.text for c in semantic_chunks]
+                section_paths = [c.section_path for c in semantic_chunks]
+                text = "\n\n".join(chunk_texts)  # Reconstruct for context enrichment
+            except Exception as e:
+                frappe.log_error(
+                    title="Docling document chunking failed",
+                    message=f"Falling back to text extraction: {str(e)}"
+                )
+                # Fall back to text extraction + chunking
+                text, visual_chunks = extract_text_smart(job, plan, settings)
+                if text:
+                    semantic_chunks = chunker.chunk_text(text, plan.document_type)
+                    chunk_texts = [c.text for c in semantic_chunks]
+                    section_paths = [c.section_path for c in semantic_chunks]
+        else:
+            # Use legacy extraction + chunking
+            text, visual_chunks = extract_text_smart(job, plan, settings)
+            if not text and not visual_chunks:
+                raise ValueError("No content could be extracted from file")
+
+            job.status = "Chunking"
+            job.save(ignore_permissions=True)
+            frappe.db.commit()
+
+            if isinstance(chunker, SemanticChunker):
+                semantic_chunks = chunker.chunk(text, plan.document_type)
+                chunk_texts = [c.text for c in semantic_chunks]
+                section_paths = [c.section_path for c in semantic_chunks]
+            else:
+                chunk_texts = chunker.chunk_text(text)
+                section_paths = ["Document"] * len(chunk_texts)
+
+            # Add visual content chunks if any
+            visual_info = []
+            if visual_chunks:
+                for vc in visual_chunks:
+                    chunk_texts.append(vc.combined)
+                    section_paths.append("Visual Content")
+                    visual_info.append(True)
+                visual_info = [False] * (len(chunk_texts) - len(visual_chunks)) + visual_info
 
     if not chunk_texts:
         raise ValueError("No chunks generated from content")
@@ -168,8 +185,10 @@ def process_smart_pipeline(job, settings):
     frappe.db.commit()
 
     # Step 4: Contextual enrichment (if enabled)
+    # Skip enrichment for images - vision description already provides context
     context_prefixes = [""] * len(chunk_texts)
-    if settings.enable_contextual_enrichment:
+    is_image = plan.content_type == 'visual' and plan.document_type == 'image'
+    if settings.enable_contextual_enrichment and not is_image:
         context_service = get_context_service()
         if context_service:
             job.status = "Enriching Context"
