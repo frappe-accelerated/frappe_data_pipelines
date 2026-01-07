@@ -1,6 +1,6 @@
 """
 Text extraction from various file formats.
-Supports PDF, DOCX, TXT, and Markdown files.
+Supports PDF, DOCX, TXT, Markdown, and image files.
 """
 import frappe
 from pathlib import Path
@@ -15,6 +15,15 @@ class TextExtractor:
         "txt": "_extract_txt",
         "docx": "_extract_docx",
         "md": "_extract_markdown",
+        # Image formats - use vision service for description
+        "jpg": "_extract_image",
+        "jpeg": "_extract_image",
+        "png": "_extract_image",
+        "gif": "_extract_image",
+        "webp": "_extract_image",
+        "bmp": "_extract_image",
+        "tiff": "_extract_image",
+        "tif": "_extract_image",
     }
 
     @classmethod
@@ -95,3 +104,19 @@ class TextExtractor:
     def _extract_markdown(cls, file_path: str) -> str:
         """Extract text from Markdown file (keep as-is for semantic meaning)."""
         return cls._extract_txt(file_path)
+
+    @classmethod
+    def _extract_image(cls, file_path: str) -> str:
+        """Extract description from image using vision service."""
+        from frappe_data_pipelines.services.vision_service import VisionService
+
+        try:
+            vision = VisionService()
+            result = vision.process_image(file_path)
+            return result.combined or result.description or ""
+        except Exception as e:
+            frappe.log_error(
+                title=f"Image extraction failed: {file_path}",
+                message=str(e)
+            )
+            return ""

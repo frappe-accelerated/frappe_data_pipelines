@@ -37,7 +37,7 @@ def ensure_settings_exist():
             doc.qdrant_host = "localhost"
             doc.qdrant_port = 6333
             doc.collection_name = "drive_documents"
-            doc.enabled_file_types = "pdf\ntxt\ndocx\nmd"
+            doc.enabled_file_types = "pdf\ntxt\ndocx\nmd\njpg\njpeg\npng"
             doc.insert(ignore_permissions=True)
             frappe.db.commit()
             frappe.logger("frappe_data_pipelines").info(
