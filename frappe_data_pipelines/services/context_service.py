@@ -30,21 +30,20 @@ class ContextEnrichmentService:
 
     Optimized for token efficiency using:
     1. Prompt caching (document cached once for all chunks)
-    2. Succinct context generation (50-100 tokens per chunk)
-    3. Claude Haiku for cost efficiency
+    2. Succinct context generation (50-80 tokens per chunk)
+    3. Fast model for cost efficiency
     """
 
-    # Anthropic's recommended prompt - optimized for succinct output
+    # Optimized prompt for brief, focused context
     CONTEXT_PROMPT_TEMPLATE = """<document>
 {document}
 </document>
 
-Here is the chunk we want to situate within the whole document:
 <chunk>
 {chunk}
 </chunk>
 
-Please give a short succinct context to situate this chunk within the overall document for improving search retrieval. Answer only with the succinct context and nothing else."""
+Write a brief 1-2 sentence context placing this chunk within the document. Be concise (max 80 words). Focus on: what section this is from, what topic it discusses, and how it relates to the document's main argument. Output only the context."""
 
     def __init__(self):
         self.settings = frappe.get_single("Data Pipeline Settings")
@@ -193,7 +192,7 @@ Please give a short succinct context to situate this chunk within the overall do
                     "content": prompt
                 }
             ],
-            max_tokens=150,  # Succinct context: typically 50-100, allow up to 150
+            max_tokens=120,  # Brief context: ~80 words / 100 tokens target
             temperature=0.1  # Low temperature for consistent contexts
         )
 
