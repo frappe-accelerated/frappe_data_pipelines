@@ -30,17 +30,15 @@ class VisionService:
     semantic understanding of visual content.
     """
 
-    # Context-first prompt: situating context prepended before content (per Anthropic's approach)
-    IMAGE_DESCRIPTION_PROMPT = """Analyze this image for search retrieval.
+    # Tight prompt for concise output - context first, then content
+    IMAGE_DESCRIPTION_PROMPT = """Extract the content from this image for search indexing.
 
-First, provide a brief situating context (1-2 sentences) that describes what type of visual this is and what topic/domain it relates to.
+Output format (50-100 words max):
+[1-2 sentence context about what this image is]
 
-Then describe the content:
-- Key data, numbers, statistics shown
-- Important text, labels, titles visible
-- Relationships or trends depicted
+[Exact text/content visible in the image]
 
-Be concise (100-150 words total). The context should come first to help situate the content for search."""
+Do NOT explain, analyze, or add commentary. Just state what type of image it is, then transcribe/describe what's actually shown."""
 
     SUPPORTED_IMAGE_TYPES = {
         '.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.tiff', '.tif'
@@ -169,7 +167,7 @@ Be concise (100-150 words total). The context should come first to help situate 
                     ]
                 }
             ],
-            max_tokens=250,  # Concise output: 100-150 words ≈ 150-200 tokens
+            max_tokens=150,  # Hard limit: 50-100 words ≈ 75-150 tokens
             temperature=0.1  # More deterministic for factual content
         )
 
