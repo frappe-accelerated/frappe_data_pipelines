@@ -7,6 +7,16 @@ app_license = "MIT"
 app_icon = "octicon octicon-database"
 app_color = "blue"
 
+# App screen configuration for desk
+add_to_apps_screen = [
+    {
+        "name": "frappe_data_pipelines",
+        "logo": "/assets/frappe_data_pipelines/icons/data-pipelines.svg",
+        "title": "Data Pipelines",
+        "route": "/app/data-pipeline-settings",
+    }
+]
+
 # Required apps
 required_apps = ["frappe", "drive"]
 
