@@ -1,39 +1,44 @@
 {
  "charts": [],
- "content": "[{\"id\":\"shortcut-1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Data Pipeline Settings\",\"shortcut_type\":\"DocType\",\"link_to\":\"Data Pipeline Settings\",\"doc_view\":\"\",\"color\":\"Blue\"}},{\"id\":\"shortcut-2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Embedding Jobs\",\"shortcut_type\":\"DocType\",\"link_to\":\"Embedding Job\",\"doc_view\":\"List\",\"color\":\"Green\"}},{\"id\":\"shortcut-3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Document Chunks\",\"shortcut_type\":\"DocType\",\"link_to\":\"Document Chunk\",\"doc_view\":\"List\",\"color\":\"Grey\"}}]",
+ "content": "[]",
  "custom_blocks": [],
  "docstatus": 0,
  "doctype": "Workspace",
  "for_user": "",
  "hide_custom": 0,
  "icon": "database",
- "is_hidden": 0,
+ "idx": 0,
+ "is_hidden": 1,
  "label": "Data Pipelines",
  "links": [
   {
    "hidden": 0,
-   "label": "Data Pipelines",
-   "type": "Card Break"
-  },
-  {
-   "hidden": 0,
-   "label": "Settings",
+   "is_query_report": 0,
+   "label": "Data Pipeline Settings",
+   "link_count": 0,
    "link_to": "Data Pipeline Settings",
    "link_type": "DocType",
+   "onboard": 0,
    "type": "Link"
   },
   {
    "hidden": 0,
+   "is_query_report": 0,
    "label": "Embedding Jobs",
+   "link_count": 0,
    "link_to": "Embedding Job",
    "link_type": "DocType",
+   "onboard": 0,
    "type": "Link"
   },
   {
    "hidden": 0,
+   "is_query_report": 0,
    "label": "Document Chunks",
+   "link_count": 0,
    "link_to": "Document Chunk",
    "link_type": "DocType",
+   "onboard": 0,
    "type": "Link"
   }
  ],
