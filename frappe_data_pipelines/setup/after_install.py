@@ -37,6 +37,18 @@ def execute():
             message=f"Failed to configure workspace sidebar: {str(e)}"
         )
 
+    # Setup desktop icon for desk page
+    try:
+        setup_desktop_icon()
+        frappe.logger("frappe_data_pipelines").info(
+            "Desktop icon configured successfully"
+        )
+    except Exception as e:
+        frappe.log_error(
+            title="Desktop Icon Setup Failed",
+            message=f"Failed to configure desktop icon: {str(e)}"
+        )
+
 
 def setup_workspace_sidebar():
     """
@@ -78,4 +90,55 @@ def setup_workspace_sidebar():
         sidebar.append("items", item)
 
     sidebar.save()
+    frappe.db.commit()
+
+
+def setup_desktop_icon():
+    """
+    Configure the Desktop Icon for Data Pipelines on the desk page.
+
+    This creates/updates the Desktop Icon to show Data Pipelines with
+    a custom icon on the Frappe desk home page, grouped under Framework.
+    """
+    icon_name = "Frappe Data Pipelines"
+
+    # Check if the icon exists
+    if not frappe.db.exists("Desktop Icon", icon_name):
+        # Create new Desktop Icon
+        icon = frappe.get_doc({
+            "doctype": "Desktop Icon",
+            "name": icon_name,
+            "label": "Data Pipelines",
+            "icon_type": "App",
+            "link_type": "External",
+            "link": "/app/data-pipeline-settings",
+            "standard": 1,
+            "app": "frappe_data_pipelines",
+            "logo_url": "/assets/frappe_data_pipelines/icons/data-pipelines.svg",
+            "hidden": 0,
+            "parent_icon": "Framework",
+            "idx": 11,
+        })
+        icon.insert(ignore_permissions=True)
+        frappe.logger("frappe_data_pipelines").info(
+            f"Created Desktop Icon: {icon_name}"
+        )
+    else:
+        # Update existing icon
+        frappe.db.set_value("Desktop Icon", icon_name, {
+            "label": "Data Pipelines",
+            "icon_type": "App",
+            "link_type": "External",
+            "link": "/app/data-pipeline-settings",
+            "logo_url": "/assets/frappe_data_pipelines/icons/data-pipelines.svg",
+            "hidden": 0,
+            "parent_icon": "Framework",
+            "idx": 11,
+        })
+        frappe.logger("frappe_data_pipelines").info(
+            f"Updated Desktop Icon: {icon_name}"
+        )
+
+    # Clear desktop icons cache
+    frappe.cache.delete_keys("desktop_icons*")
     frappe.db.commit()
