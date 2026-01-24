@@ -1,0 +1,19 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none"
+     xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect x="4" y="4" width="56" height="56" rx="12" fill="#0E7490"/>
+
+  <!-- Pipeline nodes -->
+  <rect x="16" y="18" width="8" height="8" rx="2" fill="white"/>
+  <rect x="40" y="28" width="8" height="8" rx="2" fill="white"/>
+  <rect x="16" y="38" width="8" height="8" rx="2" fill="white"/>
+
+  <!-- Connecting paths -->
+  <path d="M24 22 H36 V32"
+        stroke="white" stroke-width="3"
+        stroke-linecap="round" stroke-linejoin="round"/>
+
+  <path d="M24 42 H36 V32"
+        stroke="white" stroke-width="3"
+        stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
