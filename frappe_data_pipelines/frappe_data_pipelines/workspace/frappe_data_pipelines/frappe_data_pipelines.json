@@ -8,7 +8,7 @@
  "hide_custom": 0,
  "icon": "database",
  "idx": 0,
- "is_hidden": 1,
+ "is_hidden": 0,
  "label": "Data Pipelines",
  "links": [
   {
@@ -46,7 +46,7 @@
  "name": "Frappe Data Pipelines",
  "number_cards": [],
  "parent_page": "",
- "public": 0,
+ "public": 1,
  "quick_lists": [],
  "restrict_to_domain": "",
  "roles": [],
