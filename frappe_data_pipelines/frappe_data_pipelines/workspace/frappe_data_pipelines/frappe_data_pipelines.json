@@ -6,7 +6,7 @@
  "doctype": "Workspace",
  "for_user": "",
  "hide_custom": 0,
- "icon": "/assets/frappe_data_pipelines/icons/data-pipelines.svg",
+ "icon": "workflow",
  "idx": 0,
  "is_hidden": 0,
  "label": "Data Pipelines",
