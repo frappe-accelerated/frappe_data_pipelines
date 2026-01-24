@@ -1,19 +1,13 @@
-<svg width="64" height="64" viewBox="0 0 64 64" fill="none"
-     xmlns="http://www.w3.org/2000/svg">
-  <!-- Background -->
-  <rect x="4" y="4" width="56" height="56" rx="12" fill="#0E7490"/>
+<svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with rounded corners -->
+  <path d="M57 0H23C10.3 0 0 10.3 0 23v34c0 12.7 10.3 23 23 23h34c12.7 0 23-10.3 23-23V23C80 10.3 69.7 0 57 0Z" fill="#0E7490"/>
 
   <!-- Pipeline nodes -->
-  <rect x="16" y="18" width="8" height="8" rx="2" fill="white"/>
-  <rect x="40" y="28" width="8" height="8" rx="2" fill="white"/>
-  <rect x="16" y="38" width="8" height="8" rx="2" fill="white"/>
+  <rect x="18" y="22" width="10" height="10" rx="2.5" fill="white"/>
+  <rect x="52" y="35" width="10" height="10" rx="2.5" fill="white"/>
+  <rect x="18" y="48" width="10" height="10" rx="2.5" fill="white"/>
 
   <!-- Connecting paths -->
-  <path d="M24 22 H36 V32"
-        stroke="white" stroke-width="3"
-        stroke-linecap="round" stroke-linejoin="round"/>
-
-  <path d="M24 42 H36 V32"
-        stroke="white" stroke-width="3"
-        stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M28 27H44V40" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M28 53H44V40" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
